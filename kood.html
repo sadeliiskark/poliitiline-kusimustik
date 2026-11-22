@@ -1,0 +1,888 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poliitilise maailmavaate küsimustik</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f4f8;
+    color: #202536;
+}
+
+header {
+    background: #172554;
+    color: white;
+    padding: 45px 20px;
+    text-align: center;
+}
+
+header p { color: #dbeafe; }
+
+.container {
+    max-width: 850px;
+    margin: 30px auto;
+    padding: 0 18px;
+}
+
+.section {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px #0000000b;
+}
+
+.question {
+    padding: 18px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.question:last-child { border-bottom: none; }
+
+.question p {
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.answers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.answers label {
+    cursor: pointer;
+    background: #f1f5f9;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.answers label:has(input:checked) {
+    background: #dbeafe;
+    outline: 2px solid #2563eb;
+}
+
+.answers input { accent-color: #2563eb; }
+
+button {
+    border: none;
+    border-radius: 9px;
+    padding: 14px 23px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+}
+
+button:hover { background: #1d4ed8; }
+
+button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.secondary { background: #475569; }
+
+#results { display: none; }
+
+canvas {
+    width: 100%;
+    max-width: 650px;
+    display: block;
+    margin: 20px auto;
+}
+
+.result-box {
+    background: #eff6ff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 18px;
+}
+
+.party {
+    padding: 13px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin: 8px 0;
+}
+
+small { color: #64748b; }
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+}
+
+.hidden { display: none; }
+
+h2 { margin-top: 0; }
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Milline on sinu poliitiline maailmavaade?</h1>
+    <p>Vasta küsimustele ja avasta, millisele Eesti erakonnale sinu vaated kõige lähemal on.</p>
+</header>
+
+<div class="container">
+
+<div class="section">
+    <h2>Enne alustamist</h2>
+    <p>
+        Küsimustik uurib sinu poliitilisi eelistusi,
+        teadmisi ja maailmavaadet. Vasta küsimustele
+        ausalt, lähtudes enda isiklikest arvamustest.
+        Õigeid ega valesid vastuseid ei ole.
+    </p>
+    <small>
+        Vastused salvestatakse sinu seadme brauserisse.
+    </small>
+</div>
+
+<form id="quiz">
+
+<!-- ALGUSKÜSIMUSED -->
+
+<div class="section">
+<h2>1. Üldandmed ja poliitiline huvi</h2>
+
+<div id="generalQuestions"></div>
+</div>
+
+<!-- TINGIMUSLIKUD KÜSIMUSED -->
+
+<div class="section" id="socialMediaSection">
+<h2>2. Sotsiaalmeedia ja poliitika</h2>
+<div id="socialMediaQuestions"></div>
+</div>
+
+<!-- MAJANDUS -->
+
+<div class="section">
+<h2>3. Majanduslik maailmavaade</h2>
+<p>Kas sinu arvates peaks riik majandusse rohkem sekkuma või jätma majanduse vabamaks?</p>
+<div id="economic"></div>
+</div>
+
+<!-- SOTSIAALKULTUUR -->
+
+<div class="section">
+<h2>4. Sotsiaalkultuuriline maailmavaade</h2>
+<p>Millised on sinu seisukohad ühiskonna, kultuuri ja väärtuste küsimustes?</p>
+<div id="social"></div>
+</div>
+
+<div class="actions">
+<button type="submit" id="submitButton">
+Arvuta minu tulemus
+</button>
+
+<button type="button" class="secondary" onclick="resetQuiz()">
+Alusta uuesti
+</button>
+</div>
+
+</form>
+
+<!-- TULEMUSED -->
+
+<div class="section" id="results">
+
+<h2>Sinu poliitiline maailmavaade</h2>
+
+<div class="result-box">
+<h3 id="closestParty"></h3>
+<p id="description"></p>
+
+<p>
+<b>Majanduslik positsioon (X):</b>
+<span id="xScore"></span>
+</p>
+
+<p>
+<b>Sotsiaalkultuuriline positsioon (Y):</b>
+<span id="yScore"></span>
+</p>
+</div>
+
+<h3>Sinu asukoht poliitilisel kaardil</h3>
+
+<canvas id="chart" width="650" height="650"></canvas>
+
+<h3>Erakondade kaugus sinu tulemusest</h3>
+<div id="partyList"></div>
+
+<button type="button" onclick="window.print()">
+Prindi tulemused
+</button>
+
+</div>
+
+</div>
+
+<footer>
+Poliitilise maailmavaate küsimustik · Eesti
+</footer>
+
+<script>
+
+// VASTUSEVARIANDID
+
+const answers = [
+    {label:"Täiesti nõus", value:2},
+    {label:"Pigem nõus", value:1},
+    {label:"Neutraalne", value:0},
+    {label:"Pigem ei nõustu", value:-1},
+    {label:"Üldse ei nõustu", value:-2}
+];
+
+const yesNo = ["Jah", "Ei"];
+
+
+// ALGUSKÜSIMUSED
+
+const generalQuestions = [
+
+{
+    text:"Kui vana Te olete?",
+    type:"choice",
+    options:["15","16","17","18","19","20"]
+},
+
+{
+    text:"Mis on Teie sugu?",
+    type:"choice",
+    options:["Naine","Mees","Muu/ei soovi vastata"]
+},
+
+{
+    text:"Kui olete 2027. aasta 7. märtsiks täisealine, siis kas kavatsete osaleda Riigikogu valimistel?",
+    type:"choice",
+    options:["Jah","Ei","Pole selleks ajaks täisealine"]
+},
+
+{
+    text:"Kas kavatsete osaleda kohaliku omavalitsuse / Euroopa Parlamendi valimistel?",
+    type:"choice",
+    options:["Jah","Ei","Ei ole kindel"]
+},
+
+{
+    text:"Millist Eesti erakonda kõige rohkem toetate?",
+    type:"choice",
+    options:[
+        "Sotsiaaldemokraatlik Erakond",
+        "Isamaa Erakond",
+        "Eesti Keskerakond",
+        "Konservatiivne Rahvaerakond",
+        "Eesti 200",
+        "Eesti Reformierakond",
+        "Mitte ühtegi, mul puuduvad selleks vajalikud teadmised nende kohta",
+        "Mitte ühtegi, ühegi erakonna vaated ei ühti minu vaadetega"
+    ]
+},
+
+{
+    text:"Olen huvitatud poliitikast.",
+    type:"scale"
+},
+
+{
+    text:"Mu teadmised poliitika kohta on tugevad.",
+    type:"scale"
+},
+
+{
+    text:"Kuidas saate kõige rohkem infot poliitilistel teemadel?",
+    type:"choice",
+    options:[
+        "Uudised",
+        "Kool",
+        "Sotsiaalmeedia",
+        "Sõbrad",
+        "Muu"
+    ]
+},
+
+{
+    text:"Kas puutute kokku poliitiliste postitustega sotsiaalmeedias?",
+    type:"choice",
+    options:yesNo,
+    conditional:true
+}
+
+];
+
+
+// TINGIMUSLIKUD SOTSIAALMEEDIA KÜSIMUSED
+
+const mediaQuestions = [
+
+" Nõustun enamiku poliitiliste postitustega, mida sotsiaalmeedias näen.",
+
+"Poliitilise sisuga postitused, mida sotsiaalmeedias näen, võivad tekitada minus emotsionaalseid reaktsioone.",
+
+"Usun poliitilist sisu sotsiaalmeedias seda kontrollimata, kui see tundub üldiselt usaldusväärne.",
+
+"Kui näen poliitilise sisuga postitust, millega nõustun, siis toetan seda (like, comment, repost, share)."
+
+];
+
+
+// MAJANDUSLIKUD KÜSIMUSED
+// Töötasu alammäära küsimus on eemaldatud.
+
+const economicQuestions = [
+
+"Eestis peaks olema astmeline maksustamissüsteem, kus suurema sissetulekuga inimesed maksavad märgatavalt kõrgemat maksumäära.",
+
+"Kõrgharidus ja tervishoid peaksid olema kõigile täiesti tasuta ning riiklikult rahastatud, isegi kui see nõuab üldise maksukoormuse tõstmist.",
+
+"Riik peaks seadma ettevõtlusele võimalikult vähe regulatsioone ja piiranguid.",
+
+"Hinnatõusu ja majanduskriisi ajal peab riik piirama oluliste kaupade (nt elektri ja kütuse) hindu ning maksma toetusi elanikele.",
+
+"Keskkonda saastavate tegevuste ja sõidukite täiendav maksustamine on õiglane viis riigieelarve täitmiseks ja inimeste käitumise suunamiseks.",
+
+"Ühistransport peaks olema kõigile täiesti tasuta.",
+
+"Riik peab kehtestama maksusoodustused ja toetused majanduslikult nõrgematele piirkondadele.",
+
+"Riigi prioriteet peab olema eelarve range jälgimine, avaliku sektori kulutuste piiramine ja mitte laenamine."
+
+];
+
+
+// SOTSIAALKULTUURILISED KÜSIMUSED
+
+const socialQuestions = [
+
+"Samasoolistel paaridel peab olema õigus abielluda ja adopteerida.",
+
+"Kliimamuutuste leevendamine ja rohepööre peavad olema riiklik prioriteet, isegi kui see tõstab maksukoormust.",
+
+"Eesti riik peab prioritiseerima traditsioonide ja rahvuskultuuri säilitamist.",
+
+"Sisserännet tuleb oluliselt piirata ning immigratsiooni tingimusi karmistada, et kaitsta Eesti rahvuslikku koosseisu.",
+
+"Riik peab seadusega karistatavaks muutma vihakõne ja vähemusrühmi haavavad avalikud väljaütlemised.",
+
+"Eesti peab toetama sügavamat Euroopa Liidu integratsiooni ja rahvusvahelist ühistegevust.",
+
+"Kogu haridussüsteem peab olema eestikeelne.",
+
+"Mehed sobivad riigijuhtimisrolli paremini."
+
+];
+
+
+// SUUNAD ARVUTAMISEKS
+
+// Majanduslik telg:
+// -10 = vasakpoolne
+// +10 = parempoolne
+
+const economicDirection = [
+    -1, -1, 1, -1, -1, -1, -1, 1
+];
+
+// Sotsiaalkultuuriline telg:
+// +10 = liberaalne/progressiivne
+// -10 = konservatiivne
+
+const socialDirection = [
+    1, 1, -1, -1, 1, 1, -1, -1
+];
+
+
+// ERAKONDADE KOORDINAADID
+
+const parties = [
+    {name:"Sotsiaaldemokraatlik Erakond (SDE)", x:-10, y:10},
+    {name:"Keskerakond", x:-7.5, y:-4.5},
+    {name:"Reformierakond", x:10, y:5},
+    {name:"Eesti 200", x:8, y:9},
+    {name:"Isamaa", x:8.5, y:-7},
+    {name:"EKRE", x:7.5, y:-10}
+];
+
+
+// KÜSIMUSTE LOOMINE
+
+function createQuestion(text, name, type, options, required=true) {
+
+    const div = document.createElement("div");
+    div.className = "question";
+
+    const p = document.createElement("p");
+    p.textContent = text;
+    div.appendChild(p);
+
+    const answersDiv = document.createElement("div");
+    answersDiv.className = "answers";
+
+    const choices = type === "scale"
+        ? answers.map(a => ({label:a.label,value:a.value}))
+        : options.map(o => ({label:o,value:o}));
+
+    choices.forEach((option, i) => {
+
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+
+        input.type = "radio";
+        input.name = name;
+        input.value = option.value;
+        input.required = required && i === 0;
+
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(" " + option.label));
+
+        answersDiv.appendChild(label);
+
+    });
+
+    div.appendChild(answersDiv);
+
+    return div;
+}
+
+
+// ÜLDKÜSIMUSTE KUVAMINE
+
+function renderGeneralQuestions() {
+
+    const container = document.getElementById("generalQuestions");
+
+    generalQuestions.forEach((q,i) => {
+
+        const div = createQuestion(
+            `${i+1}. ${q.text}`,
+            `g${i}`,
+            q.type,
+            q.options || []
+        );
+
+        container.appendChild(div);
+
+    });
+
+}
+
+renderGeneralQuestions();
+
+
+// SOTSIAALMEEDIA KÜSIMUSED
+
+function renderMediaQuestions() {
+
+    const container = document.getElementById("socialMediaQuestions");
+
+    mediaQuestions.forEach((q,i) => {
+
+        const div = createQuestion(
+            `${i+10}. ${q.trim()}`,
+            `m${i}`,
+            "scale",
+            []
+        );
+
+        container.appendChild(div);
+
+    });
+
+    updateConditionalQuestions();
+
+}
+
+renderMediaQuestions();
+
+
+// MAJANDUSLIKUD JA SOTSIAALKULTUURILISED KÜSIMUSED
+
+function renderScaleQuestions(containerId, questions, prefix) {
+
+    const container = document.getElementById(containerId);
+
+    questions.forEach((q,i) => {
+
+        const div = createQuestion(
+            `${i+1}. ${q}`,
+            `${prefix}${i}`,
+            "scale",
+            []
+        );
+
+        container.appendChild(div);
+
+    });
+
+}
+
+renderScaleQuestions("economic",economicQuestions,"e");
+renderScaleQuestions("social",socialQuestions,"s");
+
+
+// TINGIMUSLIK LOOGIKA
+
+function updateConditionalQuestions() {
+
+    const answer = document.querySelector('input[name="g8"]:checked');
+
+    const section = document.getElementById("socialMediaSection");
+
+    const mediaInputs = section.querySelectorAll("input");
+
+    if(answer && answer.value === "Jah") {
+
+        section.classList.remove("hidden");
+
+        mediaInputs.forEach(input => {
+            input.disabled = false;
+            if(input.value === "2") input.required = true;
+        });
+
+    } else {
+
+        section.classList.add("hidden");
+
+        mediaInputs.forEach(input => {
+            input.disabled = true;
+            input.required = false;
+            input.checked = false;
+        });
+
+    }
+
+    saveAnswers();
+
+}
+
+document.getElementById("generalQuestions").addEventListener("change", function() {
+
+    updateConditionalQuestions();
+
+});
+
+
+// SALVESTAMINE BRAUSERIS
+
+function saveAnswers() {
+
+    const data = {};
+
+    document.querySelectorAll("#quiz input:checked").forEach(input => {
+
+        if(!input.disabled) {
+            data[input.name] = input.value;
+        }
+
+    });
+
+    localStorage.setItem(
+        "politicalQuizAnswers",
+        JSON.stringify(data)
+    );
+
+}
+
+function loadAnswers() {
+
+    const saved = JSON.parse(
+        localStorage.getItem("politicalQuizAnswers") || "{}"
+    );
+
+    Object.entries(saved).forEach(([name,value]) => {
+
+        const input = document.querySelector(
+            `input[name="${name}"][value="${CSS.escape(value)}"]`
+        );
+
+        if(input) input.checked = true;
+
+    });
+
+    updateConditionalQuestions();
+
+    // Taastame tingimuslikud vastused pärast nähtavuse uuendamist
+    Object.entries(saved).forEach(([name,value]) => {
+
+        const input = Array.from(
+            document.querySelectorAll(`input[name="${name}"]`)
+        ).find(el => el.value === value);
+
+        if(input && !input.disabled) input.checked = true;
+
+    });
+
+}
+
+document.getElementById("quiz").addEventListener("change", saveAnswers);
+
+loadAnswers();
+
+
+// ARVUTAMINE
+
+function calculate() {
+
+    let economic = 0;
+    let social = 0;
+
+    economicQuestions.forEach((q,i) => {
+
+        const input = document.querySelector(
+            `input[name="e${i}"]:checked`
+        );
+
+        const value = Number(input.value);
+
+        economic += value * economicDirection[i];
+
+    });
+
+    socialQuestions.forEach((q,i) => {
+
+        const input = document.querySelector(
+            `input[name="s${i}"]:checked`
+        );
+
+        const value = Number(input.value);
+
+        social += value * socialDirection[i];
+
+    });
+
+    const x = Math.round(
+        economic / (economicQuestions.length * 2) * 100
+    ) / 10;
+
+    const y = Math.round(
+        social / (socialQuestions.length * 2) * 100
+    ) / 10;
+
+    return {x,y};
+
+}
+
+
+// LÄHIMA ERAKONNA LEIDMINE
+
+function findClosest(x,y) {
+
+    return parties.map(p => ({
+
+        ...p,
+
+        distance: Math.sqrt(
+            Math.pow(x-p.x,2) +
+            Math.pow(y-p.y,2)
+        )
+
+    })).sort((a,b) => a.distance-b.distance);
+
+}
+
+
+// TULEMUSTE ARVUTAMINE
+
+document.getElementById("quiz").addEventListener("submit", function(e) {
+
+    e.preventDefault();
+
+    if(!this.reportValidity()) return;
+
+    saveAnswers();
+
+    const {x,y} = calculate();
+
+    const sorted = findClosest(x,y);
+
+    document.getElementById("results").style.display = "block";
+
+    document.getElementById("closestParty").textContent =
+        "Sinu vaadetele on kõige lähemal: " + sorted[0].name;
+
+    document.getElementById("description").textContent =
+        `Sinu poliitiline asukoht on (${x}; ${y}).`;
+
+    document.getElementById("xScore").textContent = x;
+    document.getElementById("yScore").textContent = y;
+
+    document.getElementById("partyList").innerHTML =
+        sorted.map((p,i) => `
+
+            <div class="party">
+
+                <b>${i+1}. ${p.name}</b><br>
+
+                <small>
+                    Koordinaadid: (${p.x}; ${p.y})
+                    · Kaugus: ${p.distance.toFixed(2)}
+                </small>
+
+            </div>
+
+        `).join("");
+
+    drawChart(x,y);
+
+    document.getElementById("results").scrollIntoView({
+        behavior:"smooth"
+    });
+
+});
+
+
+// KOORDINAATTELJESTIK
+
+function drawChart(x,y) {
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const padding = 65;
+    const scale = (w - 2*padding) / 20;
+
+    function px(v) {
+        return padding + (v+10)*scale;
+    }
+
+    function py(v) {
+        return h-padding - (v+10)*scale;
+    }
+
+    ctx.clearRect(0,0,w,h);
+
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+
+    for(let i=-10;i<=10;i+=2) {
+
+        ctx.beginPath();
+        ctx.moveTo(px(i),py(-10));
+        ctx.lineTo(px(i),py(10));
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(px(-10),py(i));
+        ctx.lineTo(px(10),py(i));
+        ctx.stroke();
+
+    }
+
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(px(-10),py(0));
+    ctx.lineTo(px(10),py(0));
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(px(0),py(-10));
+    ctx.lineTo(px(0),py(10));
+    ctx.stroke();
+
+    ctx.fillStyle = "#334155";
+    ctx.font = "13px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText("Majanduslik telg",w/2,h-13);
+
+    ctx.fillText("−10",px(-10),h-45);
+    ctx.fillText("0",px(0),h-45);
+    ctx.fillText("+10",px(10),h-45);
+
+    ctx.save();
+    ctx.translate(17,h/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText("Sotsiaalkultuuriline telg",0,0);
+    ctx.restore();
+
+    // ERAKONNAD
+
+    parties.forEach(p => {
+
+        ctx.fillStyle = "#64748b";
+
+        ctx.beginPath();
+        ctx.arc(px(p.x),py(p.y),6,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "#334155";
+        ctx.font = "11px Arial";
+        ctx.textAlign = "center";
+
+        const shortName = p.name
+            .replace("Sotsiaaldemokraatlik Erakond (SDE)","SDE")
+            .replace("Reformierakond","Reform")
+            .replace("Keskerakond","Kesk")
+            .replace("Eesti 200","Eesti 200");
+
+        ctx.fillText(shortName,px(p.x),py(p.y)-12);
+
+    });
+
+    // VASTAJA
+
+    ctx.fillStyle = "#2563eb";
+
+    ctx.beginPath();
+    ctx.arc(px(x),py(y),10,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = "#2563eb";
+    ctx.font = "bold 13px Arial";
+    ctx.fillText("Sina",px(x),py(y)-18);
+
+}
+
+
+// UUESTI ALUSTAMINE
+
+function resetQuiz() {
+
+    if(!confirm("Kas soovid kõik vastused kustutada?")) return;
+
+    localStorage.removeItem("politicalQuizAnswers");
+
+    document.getElementById("quiz").reset();
+
+    document.getElementById("results").style.display = "none";
+
+    updateConditionalQuestions();
+
+}
+
+</script>
+
+</body>
+</html>
